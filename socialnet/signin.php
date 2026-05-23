@@ -1,12 +1,6 @@
 <?php
 require_once "../includes/db.php";
-
-ini_set("session.use_strict_mode", "0");
-ini_set("session.cookie_httponly", "0");
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once "../includes/auth.php";
 
 if (isset($_SESSION["user_id"])) {
     header("Location: /socialnet/index.php");
@@ -22,28 +16,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($username === "" || $password === "") {
         $message = "Please enter username and password.";
     } else {
-        /*
-            WARNING:
-            This query is intentionally vulnerable for ATT-5 SQL Injection demo.
-            Do not use this version as the final secure version.
-        */
-        $sql = "SELECT id, username, fullname, password FROM account WHERE username = '$username'";
+        $stmt = $conn->prepare(
+            "SELECT id, username, fullname, password 
+            FROM account 
+            WHERE username = ?
+            LIMIT 1"
+        );
 
-        $result = $conn->query($sql);
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
 
-        if (!$result) {
-            die("SQL Error: " . htmlspecialchars($conn->error));
-        }
-
+        $result = $stmt->get_result();
         $user = $result->fetch_assoc();
 
         if ($user && password_verify($password, $user["password"])) {
+            session_regenerate_id(true);
+
             $_SESSION["user_id"] = $user["id"];
             $_SESSION["username"] = $user["username"];
             $_SESSION["fullname"] = $user["fullname"];
 
             header("Location: /socialnet/index.php");
             exit;
+
         } else {
             $message = "Invalid username or password.";
         }
