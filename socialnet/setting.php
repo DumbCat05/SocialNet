@@ -34,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 //     } else {
 //         $message = "Database error: " . $conn->error;
 //     }
-// }
+}
 ?>
 
 <!DOCTYPE html>
