@@ -8,16 +8,20 @@ $currentUser = get_current_user_account($conn);
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $description = trim($_POST["description"] ?? "");
+    $description = $_POST["description"] ?? "";
 
-    $stmt = $conn->prepare("UPDATE account SET description = ? WHERE id = ?");
-    $stmt->bind_param("si", $description, $currentUser["id"]);
+    /*
+        WARNING:
+        This query is intentionally vulnerable for ATT-3 SQL Injection demo.
+        Do not use this version as the final secure version.
+    */
+    $sql = "UPDATE account SET description = '$description' WHERE id = " . $currentUser["id"];
 
-    if ($stmt->execute()) {
+    if ($conn->query($sql)) {
         $message = "Profile content updated successfully.";
         $currentUser["description"] = $description;
     } else {
-        $message = "Failed to update profile content.";
+        $message = "Database error: " . $conn->error;
     }
 }
 ?>
