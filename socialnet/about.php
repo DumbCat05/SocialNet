@@ -18,7 +18,7 @@ require_login();
         <h1>About Page</h1>
 
         <p><strong>Student Name:</strong> Nguyễn Viết Nguyên Bình</p>
-        <p><strong>Student Number:</strong> YOUR_STUDENT_NUMBER</p>
+        <p><strong>Student Number:</strong> 20239523</p>
 
         <p>This is a simple Social Network web application built with PHP, MySQL, Nginx, and Linux.</p>
     </div>
