@@ -20,7 +20,6 @@ require_login();
         <p><strong>Student Name:</strong> Nguyễn Viết Nguyên Bình</p>
         <p><strong>Student Number:</strong> 20239523</p>
 
-        <p>This is a simple Social Network web application built with PHP, MySQL, Nginx, and Linux.</p>
     </div>
 </body>
 </html>
