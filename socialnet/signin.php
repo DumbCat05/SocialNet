@@ -13,17 +13,25 @@ if (isset($_SESSION["user_id"])) {
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $username = trim($_POST["username"] ?? "");
+    $username = $_POST["username"] ?? "";
     $password = $_POST["password"] ?? "";
 
     if ($username === "" || $password === "") {
         $message = "Please enter username and password.";
     } else {
-        $stmt = $conn->prepare("SELECT id, username, fullname, password FROM account WHERE username = ?");
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
+        /*
+            WARNING:
+            This query is intentionally vulnerable for ATT-5 SQL Injection demo.
+            Do not use this version as the final secure version.
+        */
+        $sql = "SELECT id, username, fullname, password FROM account WHERE username = '$username'";
 
-        $result = $stmt->get_result();
+        $result = $conn->query($sql);
+
+        if (!$result) {
+            die("SQL Error: " . htmlspecialchars($conn->error));
+        }
+
         $user = $result->fetch_assoc();
 
         if ($user && password_verify($password, $user["password"])) {
