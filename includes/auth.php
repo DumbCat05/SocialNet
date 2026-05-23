@@ -13,15 +13,23 @@ function create_profile_view_token($owner) {
         $_SESSION["profile_view_tokens"] = [];
     }
 
-    // Remove expired tokens
+    if (!isset($_SESSION["profile_csrf_secret"])) {
+        $_SESSION["profile_csrf_secret"] = bin2hex(random_bytes(32));
+    }
+
     foreach ($_SESSION["profile_view_tokens"] as $token => $data) {
         if ($data["expires"] < time()) {
             unset($_SESSION["profile_view_tokens"][$token]);
         }
     }
 
-    // Token has extra random string and is hard to guess/decode
-    $token = "pv_" . bin2hex(random_bytes(16)) . "_" . bin2hex(random_bytes(16));
+    $nonce = bin2hex(random_bytes(16));
+
+    $token = hash_hmac(
+        "sha256",
+        $owner . "|" . $nonce,
+        $_SESSION["profile_csrf_secret"]
+    );
 
     $_SESSION["profile_view_tokens"][$token] = [
         "owner" => $owner,
@@ -31,8 +39,9 @@ function create_profile_view_token($owner) {
     return $token;
 }
 
-function verify_profile_view_token($token) {
+function verify_profile_view_token($owner, $token) {
     if (
+        empty($owner) ||
         empty($token) ||
         !isset($_SESSION["profile_view_tokens"]) ||
         !isset($_SESSION["profile_view_tokens"][$token])
@@ -47,7 +56,7 @@ function verify_profile_view_token($token) {
         return false;
     }
 
-    return $data["owner"];
+    return hash_equals($data["owner"], $owner);
 }
 
 function generate_csrf_token() {

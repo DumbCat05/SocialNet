@@ -12,28 +12,24 @@ if (!$currentUser) {
     exit;
 }
 
-// Default: view own profile
-$owner = $currentUser["username"];
+$owner = $_GET["owner"] ?? "";
 
-// Friend profile must use csrf_token in URL
-if (isset($_GET["csrf_token"])) {
-    $tokenOwner = verify_profile_view_token($_GET["csrf_token"]);
+if ($owner === "") {
+    $owner = $currentUser["username"];
+}
 
-    if ($tokenOwner === false) {
+$owner = trim($owner);
+
+// If viewing another user's profile, require valid CSRF token
+if ($owner !== $currentUser["username"]) {
+    $csrfToken = $_GET["CSRF"] ?? "";
+
+    if (!verify_profile_view_token($owner, $csrfToken)) {
         http_response_code(403);
         exit("Invalid or expired CSRF token.");
     }
-
-    $owner = $tokenOwner;
 }
 
-// Block manual attack like profile.php?owner=user2
-if (isset($_GET["owner"]) && $_GET["owner"] !== $currentUser["username"]) {
-    http_response_code(403);
-    exit("Direct profile access is not allowed.");
-}
-
-// Safe prepared statement
 $stmt = $conn->prepare(
     "SELECT id, username, fullname, description 
      FROM account 
@@ -51,7 +47,6 @@ if (!$profileUser) {
     exit("Profile owner not found.");
 }
 
-// Authorization check
 $isOwnProfile = ((int)$currentUser["id"] === (int)$profileUser["id"]);
 $isFriend = are_friends($conn, $currentUser["id"], $profileUser["id"]);
 

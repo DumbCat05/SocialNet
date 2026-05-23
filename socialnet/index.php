@@ -79,9 +79,9 @@ $users = $stmt->get_result();
                         - <?php echo htmlspecialchars($user["fullname"]); ?>
 
                         <?php if ($status === "friends"): ?>
-                            <?php $profileToken = create_profile_view_token($friend["username"]); ?>
+                            <?php $profileToken = create_profile_view_token($user["username"]); ?>
 
-                            <a href="/socialnet/profile.php?csrf_token=<?php echo urlencode($profileToken); ?>">
+                            <a href="/socialnet/profile.php?owner=<?php echo urlencode($user["username"]); ?>&CSRF=<?php echo urlencode($profileToken); ?>">
                                 View Profile
                             </a>
                         <?php elseif ($status === "pending_sent"): ?>
