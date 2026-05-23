@@ -12,13 +12,28 @@ if (!$currentUser) {
     exit;
 }
 
-$owner = $_GET["owner"] ?? "";
+// Default: view own profile
+$owner = $currentUser["username"];
 
-if ($owner === "") {
-    $owner = $currentUser["username"];
+// Friend profile must use csrf_token in URL
+if (isset($_GET["csrf_token"])) {
+    $tokenOwner = verify_profile_view_token($_GET["csrf_token"]);
+
+    if ($tokenOwner === false) {
+        http_response_code(403);
+        exit("Invalid or expired CSRF token.");
+    }
+
+    $owner = $tokenOwner;
 }
 
-// Load requested profile owner safely
+// Block manual attack like profile.php?owner=user2
+if (isset($_GET["owner"]) && $_GET["owner"] !== $currentUser["username"]) {
+    http_response_code(403);
+    exit("Direct profile access is not allowed.");
+}
+
+// Safe prepared statement
 $stmt = $conn->prepare(
     "SELECT id, username, fullname, description 
      FROM account 
@@ -37,8 +52,10 @@ if (!$profileUser) {
 }
 
 // Authorization check
-// Allow user to view own profile OR accepted friend's profile
-if (!are_friends($conn, $currentUser["id"], $profileUser["id"])) {
+$isOwnProfile = ((int)$currentUser["id"] === (int)$profileUser["id"]);
+$isFriend = are_friends($conn, $currentUser["id"], $profileUser["id"]);
+
+if (!$isOwnProfile && !$isFriend) {
     http_response_code(403);
     exit("You are not allowed to view this profile.");
 }
