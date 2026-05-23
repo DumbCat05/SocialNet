@@ -1,4 +1,6 @@
 <?php
+ini_set("session.cookie_httponly", "0");
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }

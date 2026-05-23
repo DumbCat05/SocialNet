@@ -47,7 +47,7 @@ $profileUser = $result->fetch_assoc();
             <h2>Profile Content</h2>
 
             <div class="profile-content">
-                <?php echo nl2br(htmlspecialchars($profileUser["description"] ?? "")); ?>
+                <?php echo $description; ?>
             </div>
         <?php else: ?>
             <div class="message error">
