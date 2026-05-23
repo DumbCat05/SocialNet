@@ -8,6 +8,11 @@ $currentUser = get_current_user_account($conn);
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!verify_csrf_token($_POST["csrf_token"] ?? "")) {
+        http_response_code(403);
+        exit("Invalid CSRF token.");
+    }
+
     $description = $_POST["description"] ?? "";
 
     $stmt = $conn->prepare("UPDATE account SET description = ? WHERE id = ?");
@@ -19,21 +24,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 	} else {
     		$message = "Database error: " . $conn->error;
 	}
-
-    
-//     /*
-//         WARNING:
-//         This query is intentionally vulnerable for ATT-3 SQL Injection demo.
-//         Do not use this version as the final secure version.
-//     */
-//     $sql = "UPDATE account SET description = '$description' WHERE id = " . $currentUser["id"];
-
-//     if ($conn->query($sql)) {
-//         $message = "Profile content updated successfully.";
-//         $currentUser["description"] = $description;
-//     } else {
-//         $message = "Database error: " . $conn->error;
-//     }
 }
 ?>
 
@@ -57,8 +47,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <?php endif; ?>
 
         <form method="post" action="">
+            <input type="hidden" name="csrf_token"
+                value="<?php echo htmlspecialchars(generate_csrf_token(), ENT_QUOTES, "UTF-8"); ?>">
+
             <label>Description</label>
-            <textarea name="description"><?php echo htmlspecialchars($currentUser["description"] ?? ""); ?></textarea>
+            <textarea name="description"><?php echo htmlspecialchars($currentUser["description"] ?? "", ENT_QUOTES, "UTF-8"); ?></textarea>
 
             <button type="submit">Save</button>
         </form>
