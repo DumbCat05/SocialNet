@@ -104,8 +104,10 @@ $friends = $friendsStmt->get_result();
             <ul class="user-list">
                 <?php while ($friend = $friends->fetch_assoc()): ?>
                     <li>
-                        <a href="/socialnet/profile.php?owner=<?php echo urlencode($friend["username"]); ?>">
-                            <?php echo htmlspecialchars($friend["username"]); ?>
+                        <?php $profileToken = create_profile_view_token($friend["username"]); ?>
+
+                        <a href="/socialnet/profile.php?owner=<?php echo urlencode($friend["username"]); ?>&CSRF=<?php echo urlencode($profileToken); ?>">
+                            <?php echo htmlspecialchars($friend["username"], ENT_QUOTES, "UTF-8"); ?>
                         </a>
                         - <?php echo htmlspecialchars($friend["fullname"]); ?>
                     </li>
