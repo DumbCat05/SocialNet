@@ -4,17 +4,25 @@ require_once "../includes/auth.php";
 
 require_login();
 
-$owner = trim($_GET["owner"] ?? "");
+$owner = $_GET["owner"] ?? "";
 
 if ($owner === "") {
     $owner = $_SESSION["username"];
 }
 
-$stmt = $conn->prepare("SELECT username, fullname, description FROM account WHERE username = ?");
-$stmt->bind_param("s", $owner);
-$stmt->execute();
+/*
+    WARNING:
+    This query is intentionally vulnerable for ATT-4 SQL Injection demo.
+    Do not use this version as the final secure version.
+*/
+$sql = "SELECT username, fullname, description FROM account WHERE username = '$owner'";
 
-$result = $stmt->get_result();
+$result = $conn->query($sql);
+
+if (!$result) {
+    die("SQL Error: " . htmlspecialchars($conn->error));
+}
+
 $profileUser = $result->fetch_assoc();
 ?>
 
@@ -39,15 +47,7 @@ $profileUser = $result->fetch_assoc();
             <h2>Profile Content</h2>
 
             <div class="profile-content">
-                <?php
-                $description = $profileUser["description"] ?? "";
-
-                if (trim($description) === "") {
-                    echo "This user has not added profile content yet.";
-                } else {
-                    echo htmlspecialchars($description);
-                }
-                ?>
+                <?php echo nl2br(htmlspecialchars($profileUser["description"] ?? "")); ?>
             </div>
         <?php else: ?>
             <div class="message error">
